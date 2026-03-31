@@ -1,0 +1,45 @@
+.animate-scroll{
+    display: inline-flex;
+    animation: scroll 30s linear infinite;
+    
+}
+
+
+@keyframes scroll {
+    0%{
+        transform: translateX(0);
+    }
+    100%{
+        transform: translateX(-50%)
+    }
+}
+
+
+.animate-scroll:hover{
+    animation-play-state: paused;
+
+}
+
+
+
+.animate-scrolls{
+    display: inline-flex;
+    animation: scroll 30s linear infinite;
+    
+}
+
+
+.animate-scrolls {
+  display: inline-flex;
+  animation: scrolls 40s linear infinite;
+}
+
+@keyframes scrolls {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+

@@ -1,0 +1,14 @@
+.animate-scrollLoop {
+  animation: scrollLoop 15s linear infinite;
+  display: inline-flex;
+  text-align: center;
+  white-space: nowrap
+}
+@keyframes scrollLoop {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
