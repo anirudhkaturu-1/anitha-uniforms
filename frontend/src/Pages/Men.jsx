@@ -34,6 +34,7 @@ const Men = () => {
               id={item._id}
               image={item.image}
               name={item.name}
+              salePrice={item.salePrice}
               price={item.price}
             />
           ))}

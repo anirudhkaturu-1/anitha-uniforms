@@ -35,6 +35,7 @@ const Women = () => {
               image={item.image}
               name={item.name}
               price={item.price}
+              salePrice={item.salePrice}
             />
           ))}
         </div>
