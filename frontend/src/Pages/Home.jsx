@@ -10,13 +10,15 @@ import Delivered from '../components/Deliverd/Delivered'
 import Logos2 from '../components/Logos/Logos2'
 import Logos3 from '../components/Logos/Logos3'
 import NewsLetter from '../components/NewsLetter/NewsLetter'
+import UniformCarousels from '../components/UniformCarousels/UniformCarousels'
+
 const Home = () => {
   return (
     <div>
         <Hero/>
         <Logos/> 
         <ShopByCategory/> 
-        <Collections/> 
+        <UniformCarousels />
         <BestSeller/> 
         <AboutOverView/> 
         <BulkOrder/>
