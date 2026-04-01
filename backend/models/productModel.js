@@ -33,6 +33,19 @@ const productSchema = new mongoose.Schema({
         type:Array,
         required:true
     },
+    uniformType: {
+    type: String,
+    enum: [
+        "hospital",
+        "school", 
+        "college",
+        "corporate",
+        "industrial",
+        "custom"
+    ],
+    required: false,
+    default: "custom"
+    },
     bestseller:{
         type: Boolean,
         required: true

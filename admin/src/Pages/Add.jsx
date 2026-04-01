@@ -11,19 +11,28 @@ const Add = ({ token }) => {
   const [image4, setImage4] = useState(false);
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
-  const [salePrice, setSalePrice] = useState(""); // New state for sale price
+  const [salePrice, setSalePrice] = useState("");
   const [sizes, setSizes] = useState([]);
   const [category, setCategory] = useState("Men");
   const [subCategory, setSubCategory] = useState("Topwear");
+  const [uniformType, setUniformType] = useState("custom"); // Default to "custom"
   const [description, setDescription] = useState("");
   const [bestseller, setBestseller] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [hasDiscount, setHasDiscount] = useState(false); // Toggle for enabling/disabling discount
+  const [hasDiscount, setHasDiscount] = useState(false);
+
+  const uniformTypes = [
+    { value: "hospital", label: "Hospital Uniforms" },
+    { value: "school", label: "School Uniforms" },
+    { value: "college", label: "College Uniforms" },
+    { value: "corporate", label: "Corporate Uniforms" },
+    { value: "industrial", label: "Industrial Uniforms" },
+    { value: "custom", label: "Custom Uniforms" },
+  ];
 
   const onSubmitHandle = async (e) => {
     e.preventDefault();
 
-    // Validation: salePrice should not be greater than price
     if (
       hasDiscount &&
       salePrice &&
@@ -43,7 +52,6 @@ const Add = ({ token }) => {
       formData.append("description", description);
       formData.append("price", price);
 
-      // Only append salePrice if discount is enabled and salePrice has value
       if (hasDiscount && salePrice) {
         formData.append("salePrice", salePrice);
       }
@@ -51,6 +59,7 @@ const Add = ({ token }) => {
       formData.append("sizes", JSON.stringify(sizes));
       formData.append("category", category);
       formData.append("subCategory", subCategory);
+      formData.append("uniformType", uniformType); // Send the simplified value
       formData.append("bestseller", bestseller);
 
       if (image1) formData.append("image1", image1);
@@ -75,13 +84,14 @@ const Add = ({ token }) => {
         setImage4(false);
         setName("");
         setPrice("");
-        setSalePrice(""); // Reset sale price
+        setSalePrice("");
         setSizes([]);
         setCategory("Men");
         setSubCategory("Topwear");
+        setUniformType("custom"); // Reset to custom
         setDescription("");
         setBestseller(false);
-        setHasDiscount(false); // Reset discount toggle
+        setHasDiscount(false);
       } else {
         toast.error(response.data.message);
       }
@@ -91,6 +101,12 @@ const Add = ({ token }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper function to get display label
+  const getUniformTypeLabel = (value) => {
+    const type = uniformTypes.find((t) => t.value === value);
+    return type ? type.label : value;
   };
 
   return (
@@ -234,7 +250,7 @@ const Add = ({ token }) => {
         />
       </div>
 
-      {/* Category Selection */}
+      {/* Category and Sub-Category */}
       <div className="flex gap-8 flex-wrap">
         <div>
           <p className="font-medium text-gray-700">Product Category</p>
@@ -261,6 +277,26 @@ const Add = ({ token }) => {
             <option value="Winterwear">Winterwear</option>
           </select>
         </div>
+      </div>
+
+      {/* Uniform Type Selection */}
+      <div className="w-full">
+        <p className="font-medium text-gray-700">Uniform Type</p>
+        <select
+          onChange={(e) => setUniformType(e.target.value)}
+          value={uniformType}
+          className="w-full max-w-[500px] border border-gray-300 rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          required
+        >
+          {uniformTypes.map((type) => (
+            <option key={type.value} value={type.value}>
+              {type.label}
+            </option>
+          ))}
+        </select>
+        <p className="text-sm text-gray-500 mt-1">
+          Select the type of uniform this product belongs to
+        </p>
       </div>
 
       {/* Price Section with Sale Price */}

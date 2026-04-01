@@ -11,6 +11,7 @@ const addProducts = async (req, res) => {
       salePrice,
       category,
       subCategory,
+      uniformType,
       sizes,
       bestseller,
     } = req.body;
@@ -43,13 +44,33 @@ const addProducts = async (req, res) => {
       });
     }
 
+    // Validate uniformType
+    const validUniformTypes = [
+      "hospital",
+      "school",
+      "college",
+      "corporate",
+      "industrial",
+      "custom",
+    ];
+
+    if (!uniformType || !validUniformTypes.includes(uniformType)) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Invalid uniform type. Must be one of: " +
+          validUniformTypes.join(", "),
+      });
+    }
+
     const productData = {
       name,
       description,
       category,
       price: parsedPrice,
-      salePrice: parsedSalePrice, // Will be null if not provided
+      salePrice: parsedSalePrice,
       subCategory,
+      uniformType, // Add uniformType to product data
       bestseller: bestseller === "true" ? true : false,
       sizes: JSON.parse(sizes),
       image: imagesUrl,
@@ -144,6 +165,61 @@ const getProductsSortedByPrice = async (req, res) => {
   }
 };
 
+// Optional: Get products filtered by uniform type
+const getProductsByUniformType = async (req, res) => {
+  try {
+    const { type } = req.params;
+    const validUniformTypes = [
+      "hospital",
+      "school",
+      "college",
+      "corporate",
+      "industrial",
+      "custom",
+    ];
+
+    if (!validUniformTypes.includes(type)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid uniform type",
+      });
+    }
+
+    const products = await productModel.find({ uniformType: type });
+    res.json({ success: true, products });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Optional: Get all uniform types with product counts
+const getUniformTypesStats = async (req, res) => {
+  try {
+    const stats = await productModel.aggregate([
+      {
+        $group: {
+          _id: "$uniformType",
+          count: { $sum: 1 },
+          products: { $push: "$$ROOT" },
+        },
+      },
+      {
+        $project: {
+          uniformType: "$_id",
+          count: 1,
+          products: { $slice: ["$products", 5] }, // Limit to 5 products per type
+        },
+      },
+    ]);
+
+    res.json({ success: true, stats });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export {
   addProducts,
   listProducts,
@@ -151,4 +227,6 @@ export {
   singleProducts,
   searchProducts,
   getProductsSortedByPrice,
+  getProductsByUniformType,
+  getUniformTypesStats,
 };
