@@ -16,15 +16,15 @@ const Home = () => {
   return (
     <div>
         <Hero/>
-        <Logos/> 
+        {/* <Logos/>  */}
         <ShopByCategory/> 
         <UniformCarousels />
         <BestSeller/> 
         <AboutOverView/> 
         <BulkOrder/>
         <Delivered/>    
-        <Logos2/>
-        <Logos3/>
+        {/* <Logos2/>
+        <Logos3/> */}
         <NewsLetter/>
 
     </div>
