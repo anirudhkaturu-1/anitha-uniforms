@@ -5,392 +5,329 @@ import { toast } from "react-toastify";
 import { backendUrl } from "../App";
 
 const Add = ({ token }) => {
-  const [image1, setImage1] = useState(false);
-  const [image2, setImage2] = useState(false);
-  const [image3, setImage3] = useState(false);
-  const [image4, setImage4] = useState(false);
+  const [images, setImages] = useState([null, null, null, null]);
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [salePrice, setSalePrice] = useState("");
   const [sizes, setSizes] = useState([]);
   const [category, setCategory] = useState("Men");
   const [subCategory, setSubCategory] = useState("Topwear");
-  const [uniformType, setUniformType] = useState("custom"); // Default to "custom"
+  const [uniformType, setUniformType] = useState("custom");
   const [description, setDescription] = useState("");
   const [bestseller, setBestseller] = useState(false);
   const [loading, setLoading] = useState(false);
   const [hasDiscount, setHasDiscount] = useState(false);
 
-  const uniformTypes = [
-    { value: "hospital", label: "Hospital Uniforms" },
-    { value: "school", label: "School Uniforms" },
-    { value: "college", label: "College Uniforms" },
-    { value: "corporate", label: "Corporate Uniforms" },
-    { value: "industrial", label: "Industrial Uniforms" },
-    { value: "custom", label: "Custom Uniforms" },
-  ];
+  // State to track the last clicked index for Shift-Click functionality
+  const [lastSelectedIndex, setLastSelectedIndex] = useState(null);
+
+  // Generate numeric range 20 to 50
+  const numericRange = Array.from({ length: 31 }, (_, i) => i + 20);
+
+  const toggleSize = (e, size, index) => {
+    // If Shift key is held and there's a previously clicked item
+    if (e.shiftKey && lastSelectedIndex !== null) {
+      const start = Math.min(lastSelectedIndex, index);
+      const end = Math.max(lastSelectedIndex, index);
+
+      // Get all numbers in the visual range from the numericRange array
+      const rangeSelection = numericRange.slice(start, end + 1);
+
+      // Merge new range with previous selections and remove duplicates
+      setSizes((prev) => Array.from(new Set([...prev, ...rangeSelection])));
+    } else {
+      // Normal toggle behavior
+      setSizes((prev) =>
+        prev.includes(size)
+          ? prev.filter((item) => item !== size)
+          : [...prev, size],
+      );
+    }
+    // Update the anchor point for the next shift-click
+    setLastSelectedIndex(index);
+  };
+
+  const selectAllSizes = () => setSizes(numericRange);
+  const clearAllSizes = () => {
+    setSizes([]);
+    setLastSelectedIndex(null);
+  };
+
+  const handleImageChange = (index, file) => {
+    const newImages = [...images];
+    newImages[index] = file;
+    setImages(newImages);
+  };
 
   const onSubmitHandle = async (e) => {
     e.preventDefault();
+
+    if (sizes.length === 0) {
+      toast.error("Please select at least one size");
+      return;
+    }
 
     if (
       hasDiscount &&
       salePrice &&
       parseFloat(salePrice) >= parseFloat(price)
     ) {
-      toast.error(
-        "Sale price cannot be greater than or equal to original price",
-      );
+      toast.error("Sale price must be lower than original price");
       return;
     }
 
     setLoading(true);
-
     try {
       const formData = new FormData();
       formData.append("name", name);
       formData.append("description", description);
       formData.append("price", price);
+      if (hasDiscount) formData.append("salePrice", salePrice);
 
-      if (hasDiscount && salePrice) {
-        formData.append("salePrice", salePrice);
-      }
-
+      // Send sizes as a clean array of numbers
       formData.append("sizes", JSON.stringify(sizes));
+
       formData.append("category", category);
       formData.append("subCategory", subCategory);
-      formData.append("uniformType", uniformType); // Send the simplified value
+      formData.append("uniformType", uniformType);
       formData.append("bestseller", bestseller);
 
-      if (image1) formData.append("image1", image1);
-      if (image2) formData.append("image2", image2);
-      if (image3) formData.append("image3", image3);
-      if (image4) formData.append("image4", image4);
+      images.forEach((img, i) => {
+        if (img) formData.append(`image${i + 1}`, img);
+      });
 
       const response = await axios.post(
-        backendUrl + "/api/product/add-product",
+        `${backendUrl}/api/product/add-product`,
         formData,
-        {
-          headers: { authorization: `Bearer ${token}` },
-        },
+        { headers: { authorization: `Bearer ${token}` } },
       );
 
       if (response.data.success) {
-        toast.success(response.data.message);
-        // Reset form
-        setImage1(false);
-        setImage2(false);
-        setImage3(false);
-        setImage4(false);
+        toast.success("Product added successfully!");
+        // Reset Logic
         setName("");
         setPrice("");
         setSalePrice("");
         setSizes([]);
-        setCategory("Men");
-        setSubCategory("Topwear");
-        setUniformType("custom"); // Reset to custom
-        setDescription("");
-        setBestseller(false);
+        setImages([null, null, null, null]);
         setHasDiscount(false);
-      } else {
-        toast.error(response.data.message);
+        setLastSelectedIndex(null);
+        setDescription("");
       }
     } catch (error) {
-      console.log(error);
-      toast.error(error.response?.data?.message || "Something went wrong");
+      toast.error(error.response?.data?.message || "Upload failed");
     } finally {
       setLoading(false);
     }
   };
 
-  // Helper function to get display label
-  const getUniformTypeLabel = (value) => {
-    const type = uniformTypes.find((t) => t.value === value);
-    return type ? type.label : value;
-  };
-
   return (
     <form
       onSubmit={onSubmitHandle}
-      className="flex flex-col w-full items-start gap-6 bg-white rounded-2xl p-6"
+      className="flex flex-col w-full max-w-4xl gap-8 bg-white p-8 rounded-2xl shadow-sm border border-gray-100"
     >
-      {/* Image Upload Section */}
-      <div className="w-full">
-        <p className="mb-2 text-xl font-semibold text-gray-700">
-          Upload Images
-        </p>
-        <div className="flex gap-4 flex-wrap">
-          <label
-            htmlFor="image1"
-            className="p-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 flex items-center justify-center w-24 h-24"
-          >
-            <div className="relative">
-              {image1 && (
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setImage1(false);
-                  }}
-                  className="absolute top-[-30px] right-[-30px] rounded-full bg-red-800 text-white text-lg"
-                >
-                  x
-                </button>
-              )}
-              {image1 ? (
-                <img
-                  src={URL.createObjectURL(image1)}
-                  alt="preview"
-                  className="object-cover w-full h-full"
-                />
-              ) : (
-                <FaCloudUploadAlt size={24} className="text-gray-500" />
-              )}
-            </div>
-            <input
-              onChange={(e) => setImage1(e.target.files[0])}
-              type="file"
-              id="image1"
-              hidden
-            />
-          </label>
-
-          <label
-            htmlFor="image2"
-            className="p-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 flex items-center justify-center w-24 h-24"
-          >
-            <div>
-              {image2 ? (
-                <img
-                  src={URL.createObjectURL(image2)}
-                  alt="preview"
-                  className="object-cover w-full h-full"
-                />
-              ) : (
-                <FaCloudUploadAlt size={24} className="text-gray-500" />
-              )}
-            </div>
-            <input
-              onChange={(e) => setImage2(e.target.files[0])}
-              type="file"
-              id="image2"
-              hidden
-            />
-          </label>
-
-          <label
-            htmlFor="image3"
-            className="p-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 flex items-center justify-center w-24 h-24"
-          >
-            <div>
-              {image3 ? (
-                <img
-                  src={URL.createObjectURL(image3)}
-                  alt="preview"
-                  className="object-cover w-full h-full"
-                />
-              ) : (
-                <FaCloudUploadAlt size={24} className="text-gray-500" />
-              )}
-            </div>
-            <input
-              onChange={(e) => setImage3(e.target.files[0])}
-              type="file"
-              id="image3"
-              hidden
-            />
-          </label>
-
-          <label
-            htmlFor="image4"
-            className="p-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 flex items-center justify-center w-24 h-24"
-          >
-            <div>
-              {image4 ? (
-                <img
-                  src={URL.createObjectURL(image4)}
-                  alt="preview"
-                  className="object-cover w-full h-full"
-                />
-              ) : (
-                <FaCloudUploadAlt size={24} className="text-gray-500" />
-              )}
-            </div>
-            <input
-              onChange={(e) => setImage4(e.target.files[0])}
-              type="file"
-              id="image4"
-              hidden
-            />
-          </label>
-        </div>
-      </div>
-
-      {/* Product Name */}
-      <div className="w-full">
-        <p className="font-medium text-gray-700">Product Name</p>
-        <input
-          className="w-full max-w-[500px] border border-gray-300 rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          type="text"
-          placeholder="Product name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
-      </div>
-
-      {/* Product Description */}
-      <div className="w-full">
-        <p className="font-medium text-gray-700">Product Description</p>
-        <textarea
-          className="w-full max-w-[500px] border border-gray-300 rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          placeholder="Product description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          required
-        />
-      </div>
-
-      {/* Category and Sub-Category */}
-      <div className="flex gap-8 flex-wrap">
-        <div>
-          <p className="font-medium text-gray-700">Product Category</p>
-          <select
-            onChange={(e) => setCategory(e.target.value)}
-            value={category}
-            className="border border-gray-300 rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          >
-            <option value="Men">Men</option>
-            <option value="Women">Women</option>
-            <option value="Kids">Kids</option>
-          </select>
-        </div>
-
-        <div>
-          <p className="font-medium text-gray-700">Product Sub-Category</p>
-          <select
-            onChange={(e) => setSubCategory(e.target.value)}
-            value={subCategory}
-            className="border border-gray-300 rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          >
-            <option value="Topwear">Topwear</option>
-            <option value="Bottomwear">Bottomwear</option>
-            <option value="Winterwear">Winterwear</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Uniform Type Selection */}
-      <div className="w-full">
-        <p className="font-medium text-gray-700">Uniform Type</p>
-        <select
-          onChange={(e) => setUniformType(e.target.value)}
-          value={uniformType}
-          className="w-full max-w-[500px] border border-gray-300 rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          required
-        >
-          {uniformTypes.map((type) => (
-            <option key={type.value} value={type.value}>
-              {type.label}
-            </option>
-          ))}
-        </select>
-        <p className="text-sm text-gray-500 mt-1">
-          Select the type of uniform this product belongs to
-        </p>
-      </div>
-
-      {/* Price Section with Sale Price */}
-      <div className="w-full">
-        <p className="font-medium text-gray-700">Original Price</p>
-        <input
-          className="w-full max-w-[500px] border border-gray-300 rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          type="number"
-          step="0.01"
-          placeholder="99.99"
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-          required
-        />
-      </div>
-
-      {/* Discount Toggle */}
-      <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          id="hasDiscount"
-          className="w-4 h-4"
-          onChange={() => setHasDiscount((prev) => !prev)}
-          checked={hasDiscount}
-        />
-        <label htmlFor="hasDiscount" className="text-gray-700 font-medium">
-          Apply Discount / Sale Price
-        </label>
-      </div>
-
-      {/* Sale Price Field - Only show when discount is enabled */}
-      {hasDiscount && (
-        <div className="w-full">
-          <p className="font-medium text-gray-700">
-            Sale Price (Discounted Price)
-          </p>
-          <input
-            className="w-full max-w-[500px] border border-green-300 rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-green-400"
-            type="number"
-            step="0.01"
-            placeholder="79.99"
-            value={salePrice}
-            onChange={(e) => setSalePrice(e.target.value)}
-            required={hasDiscount}
-          />
-          <p className="text-sm text-gray-500 mt-1">
-            Sale price must be less than original price
-          </p>
-        </div>
-      )}
-
-      {/* Sizes */}
+      {/* Header */}
       <div>
-        <p className="font-medium text-gray-700 mb-2">Product Sizes</p>
-        <div className="flex gap-3">
-          {["S", "M", "L", "XL", "XXL"].map((size) => (
-            <div
-              onClick={() =>
-                setSizes((prev) =>
-                  prev.includes(size)
-                    ? prev.filter((item) => item !== size)
-                    : [...prev, size],
-                )
-              }
-              key={size}
-              className={`border border-gray-300 px-4 py-2 rounded-md cursor-pointer transition ${sizes.includes(size) ? "bg-pink-400 border-pink-500 text-white" : "bg-gray-100 hover:bg-gray-200"}`}
-            >
-              <p>{size}</p>
+        <h1 className="text-2xl font-bold text-gray-800">Add New Product</h1>
+        <p className="text-gray-500">
+          Fill in the details to list a new uniform item.
+        </p>
+      </div>
+
+      {/* Image Upload Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {images.map((img, index) => (
+          <label
+            key={index}
+            className="group relative flex flex-col items-center justify-center h-32 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all overflow-hidden"
+          >
+            {img ? (
+              <img
+                src={URL.createObjectURL(img)}
+                className="absolute inset-0 w-full h-full object-cover"
+                alt="preview"
+              />
+            ) : (
+              <div className="flex flex-col items-center text-gray-400 group-hover:text-blue-500">
+                <FaCloudUploadAlt size={28} />
+                <span className="text-xs mt-2">Upload</span>
+              </div>
+            )}
+            <input
+              type="file"
+              hidden
+              onChange={(e) => handleImageChange(index, e.target.files[0])}
+            />
+          </label>
+        ))}
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Basic Info */}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700">
+              Product Name
+            </label>
+            <input
+              className="w-full mt-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700">
+              Description
+            </label>
+            <textarea
+              className="w-full mt-1 px-4 py-2 border rounded-lg h-24 focus:ring-2 focus:ring-blue-400 outline-none"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              required
+            />
+          </div>
+        </div>
+
+        {/* Pricing & Category */}
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700">
+                Price
+              </label>
+              <input
+                className="w-full mt-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
+                type="number"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                required
+              />
             </div>
-          ))}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700">
+                Sale Price
+              </label>
+              <input
+                disabled={!hasDiscount}
+                className={`w-full mt-1 px-4 py-2 border rounded-lg outline-none transition ${
+                  hasDiscount
+                    ? "bg-white focus:ring-2 focus:ring-green-400"
+                    : "bg-gray-50"
+                }`}
+                type="number"
+                value={salePrice}
+                onChange={(e) => setSalePrice(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="disc"
+              checked={hasDiscount}
+              onChange={() => setHasDiscount(!hasDiscount)}
+              className="w-4 h-4 accent-blue-600"
+            />
+            <label htmlFor="disc" className="text-sm font-medium text-gray-600">
+              Enable sale price
+            </label>
+          </div>
+          <div className="grid grid-cols-2 gap-4 pt-2">
+            <select
+              className="px-3 py-2 border rounded-lg bg-white"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+            >
+              <option value="Men">Men</option>
+              <option value="Women">Women</option>
+              <option value="Kids">Kids</option>
+            </select>
+            <select
+              className="px-3 py-2 border rounded-lg bg-white"
+              value={uniformType}
+              onChange={(e) => setUniformType(e.target.value)}
+            >
+              <option value="school">School</option>
+              <option value="hospital">Hospital</option>
+              <option value="college">College</option>
+              <option value="corporate">Corporate</option>
+              <option value="industrial">Industrial</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      {/* Bestseller Toggle */}
-      <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          id="bestseller"
-          className="w-4 h-4"
-          onChange={() => setBestseller((prev) => !prev)}
-          checked={bestseller}
-        />
-        <label htmlFor="bestseller" className="text-gray-700 font-medium">
-          Add To Bestseller
-        </label>
+      {/* SIZE SELECTION WITH RANGE SELECTION */}
+      <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200">
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h3 className="font-bold text-gray-800">Available Sizes</h3>
+            <p className="text-xs text-gray-500">
+              Hold <span className="font-bold text-blue-600">Shift</span> to
+              select a range
+            </p>
+          </div>
+          <div className="flex gap-4">
+            <button
+              type="button"
+              onClick={selectAllSizes}
+              className="text-xs font-bold text-blue-600 hover:underline"
+            >
+              SELECT ALL
+            </button>
+            <button
+              type="button"
+              onClick={clearAllSizes}
+              className="text-xs font-bold text-red-500 hover:underline"
+            >
+              CLEAR
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
+          {numericRange.map((size, index) => (
+            <button
+              key={size}
+              type="button"
+              onClick={(e) => toggleSize(e, size, index)}
+              className={`py-2 text-sm font-bold rounded-lg border select-none transition-all duration-200 ${
+                sizes.includes(size)
+                  ? "bg-blue-600 border-blue-600 text-white shadow-md scale-105"
+                  : "bg-white border-gray-200 text-gray-600 hover:border-blue-300 hover:text-blue-500"
+              }`}
+            >
+              {size}
+            </button>
+          ))}
+        </div>
+        <div className="mt-4 flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="best"
+            checked={bestseller}
+            onChange={() => setBestseller(!bestseller)}
+            className="w-4 h-4 accent-blue-600"
+          />
+          <label htmlFor="best" className="text-sm font-semibold text-gray-700">
+            Mark as Bestseller
+          </label>
+        </div>
       </div>
 
-      {/* Submit Button */}
       <button
         type="submit"
         disabled={loading}
-        className={`w-28 py-3 px-5 rounded-2xl font-bold text-white transition ${loading ? "bg-gray-500 cursor-not-allowed" : "bg-black hover:bg-gray-800"}`}
+        className={`w-full py-4 rounded-xl font-bold text-white shadow-lg transition-all ${
+          loading
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-blue-600 hover:bg-blue-700 active:scale-[0.98]"
+        }`}
       >
-        {loading ? "Adding..." : "Add"}
+        {loading ? "Processing..." : "Create Product Listing"}
       </button>
     </form>
   );
