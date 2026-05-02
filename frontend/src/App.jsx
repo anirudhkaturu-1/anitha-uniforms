@@ -63,7 +63,7 @@ const App = () => {
               <Route path='/about' element={<About />}></Route>
               <Route path='/women' element={<Women />}></Route>
               <Route path='/men' element={<Men />}></Route>
-              <Route path='/child' element={<Child />}></Route>
+              <Route path='/kids' element={<Child />}></Route>
               <Route path='/product/:id' element={<Product />}></Route>
               <Route path='/collections' element={<Collections />}></Route>
               <Route path='/bulk' element={<Bulk />}></Route>
