@@ -22,7 +22,7 @@ const Add = ({ token }) => {
   const [lastSelectedIndex, setLastSelectedIndex] = useState(null);
 
   // Generate numeric range 20 to 50
-  const numericRange = Array.from({ length: 31 }, (_, i) => i + 20);
+  const numericRange = Array.from({ length: 16 }, (_, i) => 20 + i * 2);
 
   const toggleSize = (e, size, index) => {
     // If Shift key is held and there's a previously clicked item
