@@ -9,8 +9,8 @@ const UniformCarousels = () => {
   const [grouped, setGrouped] = useState({});
 
   const uniformTypes = [
-    { value: "hospital", label: "Hospital", subtitle: "Medical Grade" },
     { value: "school", label: "School", subtitle: "Academic Wear" },
+    { value: "hospital", label: "Hospital", subtitle: "Medical Grade" },
     { value: "corporate", label: "Corporate", subtitle: "Executive Wear" },
     { value: "industrial", label: "Industrial", subtitle: "Heavy Duty" },
     { value: "custom", label: "Custom", subtitle: "Bespoke" },

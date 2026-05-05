@@ -91,10 +91,25 @@ const addProducts = async (req, res) => {
 //List all products
 const listProducts = async (req, res) => {
   try {
-    const products = await productModel.find({});
+    const products = await productModel.aggregate([
+      {
+        $addFields: {
+          // Assign priority 1 to school, 2 to everything else
+          sortOrder: {
+            $cond: {
+              if: { $eq: ["$uniformType", "school"] },
+              then: 1,
+              else: 2,
+            },
+          },
+        },
+      },
+      {
+        $sort: { sortOrder: 1, date: -1 }, // Sort by priority then by newest
+      },
+    ]);
     res.json({ success: true, products });
   } catch (error) {
-    console.log(error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
