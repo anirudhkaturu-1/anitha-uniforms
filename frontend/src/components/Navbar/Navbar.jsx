@@ -78,7 +78,6 @@ const Navbar = () => {
   const handleSearchToggle = () => {
     setShowSearch((prev) => {
       if (prev) {
-        // if currently open, clear on close
         setQuery("");
         setSearchResults([]);
       }
@@ -140,7 +139,7 @@ const Navbar = () => {
             { path: "/collections", label: "Collections" },
             { path: "/bulk", label: "Bulk" },
             { path: "/about", label: "About" },
-            { path: "/track-order", label: "Track Order" },
+            // { path: "/track-order", label: "Track Order" },
             { path: "/contact", label: "Contact" },
           ].map((item) => (
             <NavLink
@@ -263,7 +262,7 @@ const Navbar = () => {
             </Link>
           )}
 
-          {/* Mobile Menu */}
+          {/* Mobile Menu Toggle */}
           <button
             className="md:hidden text-2xl cursor-pointer"
             onClick={() => setMenuOpen(!menuOpen)}
@@ -272,7 +271,7 @@ const Navbar = () => {
           </button>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Menu Overlay */}
         {menuOpen && (
           <motion.div
             initial={{ opacity: 0, y: -50 }}
@@ -287,9 +286,9 @@ const Navbar = () => {
                 { path: "/men", label: "Men" },
                 { path: "/kids", label: "Kids" },
                 { path: "/collections", label: "Collections" },
-                { path: "/about", label: "About" },
                 { path: "/bulk", label: "Bulk" },
-                { path: "/track-order", label: "Track Order" },
+                { path: "/about", label: "About" },
+                // { path: "/track-order", label: "Track Order" },
                 { path: "/contact", label: "Contact" },
               ].map((item) => (
                 <NavLink

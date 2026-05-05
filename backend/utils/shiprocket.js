@@ -101,3 +101,39 @@ export const createShiprocketOrder = async (orderData) => {
     );
   }
 };
+
+// 🆕 Function to track shipment by AWB number
+export const trackShiprocketOrder = async (awbCode) => {
+  try {
+    const token = await getShiprocketToken();
+    const response = await axios.get(
+      `https://apiv2.shiprocket.in/v1/external/courier/track/awb/${awbCode}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Shiprocket Tracking Error:", error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || "Could not fetch tracking information");
+  }
+};
+
+/**
+ * Fetch full order details from Shiprocket using its order_id
+ */
+export const getShiprocketOrderDetails = async (shiprocketOrderId) => {
+  try {
+    const token = await getShiprocketToken();
+    const response = await axios.get(
+      `https://apiv2.shiprocket.in/v1/external/orders/show/${shiprocketOrderId}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Shiprocket Order Details Error:", error.response?.data || error.message);
+    throw new Error("Could not fetch order details from Shiprocket");
+  }
+};
